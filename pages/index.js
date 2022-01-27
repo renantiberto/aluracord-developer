@@ -127,6 +127,7 @@ export default function PaginaInicial() {
                         <Button
                             type="submit"
                             label="Entrar"
+                            href='/chat'
                             fullWidth
                             buttonColors={{
                                 contrastColor:
