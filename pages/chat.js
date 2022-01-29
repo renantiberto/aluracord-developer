@@ -1,10 +1,29 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js'
+
+// Como fazer AJAX: https://medium.com/@omariosouto/entendendo-como-fazer-ajax-com-a-fetchapi-977ff20da3c6
+// Fazer um efeito quando passar o mouse em cima (Referência: https://pt-br.reactjs.org/docs/events.html#mouse-events)
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQxMzkzNiwiZXhwIjoxOTU4OTg5OTM2fQ.UL5benMHaYalYXk8WlSy4LxjQIlwiNe7pQs03RSX5ms';
+const SUPABASE_URL = 'https://rhtikwkmvxotzhwkytro.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
+
+    React.useEffect(() => {
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', {ascending: false})
+            .then(({ data }) => {
+                console.log('Dados da consulta: ', data);
+                setListaDeMensagens(data);
+            });
+    }, []);
 
     /*
     // Usuário
@@ -17,17 +36,27 @@ export default function ChatPage() {
     - [X] Vamos usar o onChange usa o useState (ter if pra caso seja enter pra limpar a variavel)
     - [X] Lista de mensagens 
     */
+
     function handleNovaMensagem(novaMensagem) {
         const mensagem = {
-            id: listaDeMensagens.length + 1,
+            // id: listaDeMensagens.length + 1,
             de: 'renantiberto',
             texto: novaMensagem,
         };
 
-        setListaDeMensagens([
-            mensagem,
-            ...listaDeMensagens,
-        ]);
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no Supabase.
+                mensagem
+            ])
+            .then(({ data }) => {
+                setListaDeMensagens([
+                    data[0],
+                    ...listaDeMensagens,
+                ]);
+            });
+
         setMensagem('');
     }
 
@@ -35,8 +64,8 @@ export default function ChatPage() {
         <Box
             styleSheet={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: appConfig.theme.colors.primary[500],
-                backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)`,
+                backgroundColor: appConfig.theme.colors.columbia[500],
+                backgroundImage: `url(https://images.unsplash.com/photo-1584949091598-c31daaaa4aa9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80)`,
                 backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
                 color: appConfig.theme.colors.neutrals['000']
             }}
@@ -53,6 +82,7 @@ export default function ChatPage() {
                     maxWidth: '95%',
                     maxHeight: '95vh',
                     padding: '32px',
+                    opacity: 0.9,
                 }}
             >
                 <Header />
@@ -103,7 +133,7 @@ export default function ChatPage() {
                                 resize: 'none',
                                 borderRadius: '5px',
                                 padding: '6px 8px',
-                                backgroundColor: appConfig.theme.colors.neutrals[800],
+                                backgroundColor: appConfig.theme.colors.columbia[900],
                                 marginRight: '12px',
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
@@ -120,7 +150,7 @@ function Header() {
         <>
             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
                 <Text variant='heading5'>
-                    Chat
+                    Chat Dev
                 </Text>
                 <Button
                     variant='tertiary'
@@ -174,7 +204,7 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/renantiberto.png`}
+                                src={`https://github.com/${mensagem.de}.png`}
                             />
                             <Text tag="strong">
                                 {mensagem.de}
